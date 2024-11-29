@@ -22,8 +22,16 @@ server <- function(input, output, session) {
   
   # values-reactive Values relevant across all calculations put in a reactive for easier access
   values <- reactive({
+    req(input$shift_count) 
+  	req(input$fuel_entry_count) 
+  	req(input$hemm_count) 
+  	req(input$hemm_daily_consump) 
+  	req(input$truck_count) 
+  	req(input$logger_count_per_bowser)
+
     # these variables are out since they are being used for calculation in data frame
     # data frame scope prevents creation and usage in the same scope hence outside creation
+    shift_count <- ifelse(is.null(input$shift_count) || input$shift_count == "", 1, as.numeric(input$shift_count))
     entries_per_year = req(input$fuel_entry_count) * 365
     error_entries = entries_per_year * req(input$error_margin) / 100
     correct_entries = entries_per_year - error_entries
@@ -34,7 +42,8 @@ server <- function(input, output, session) {
       input$hemm_count * input$hemm_daily_consump * 365 else
         input$truck_count * 65 * 70 * 365 # each bowser fuelling 65 hemm, each hemm daily consumption of 70lts
     
-    count_of_loggers = input$shift_count * input$truck_count * req(input$logger_count_per_bowser)
+    count_of_loggers <- input$shift_count * input$truck_count * req(input$logger_count_per_bowser)
+
     
     
     count_of_dataEntry = round((correct_entries * 3) / 60 / 5 / working_days, digits = 0) +
