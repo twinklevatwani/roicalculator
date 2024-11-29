@@ -56,6 +56,11 @@ ui <- shinyUI(fluidPage(
           font-size: 24px;
           margin: 0;
       }
+      .btn-info {
+              background-color: #28a745 !important; /* Green background */
+              color: white !important; /* White text */
+              border-color: #28a745 !important; /* Green border */
+      }
     "))
   ),
   
@@ -90,7 +95,7 @@ ui <- shinyUI(fluidPage(
                           fluidRow(
                             column(12,
                                    div(
-                                     fluidRow(column(9,h3("Step 1: Enter FTE Details")),column(3,div(class="right-align",br(),actionButton("manpower_info_button", "Info", icon = icon("info-circle"))))),
+                                     fluidRow(column(9,h3("Step 1: Enter FTE Details")),column(3,div(class="right-align",br(),actionButton("manpower_info_button", "Info", icon = icon("info-circle"), class = "btn-info")))),
                                      radioButtons("manpower_dispatch_q","Do you have Fuel Dispatchers for scheduling Fuel Bowser Trips?",
                                                   choices = c("Yes" = TRUE, "No" = FALSE),
                                                   inline = TRUE),
@@ -112,7 +117,7 @@ ui <- shinyUI(fluidPage(
                           fluidRow(
                             column(12,
                                    div(
-                                     fluidRow(column(9,h3(" Step 2: CTC Input")),column(3,div(class="right-align",br(),actionButton("manpower_ctc_info_button", "Info", icon = icon("info-circle"))))),
+                                     fluidRow(column(9,h3(" Step 2: CTC Input")),column(3,div(class="right-align",br(),actionButton("manpower_ctc_info_button", "Info", icon = icon("info-circle"), class = "btn-info")))),
                                      
                                      sliderInput("fuel_dispatcher_cost","Avg Annual CTC of Fuel Dispatcher: ",value=500000,min=100000,max=1000000),
                                      sliderInput("fuel_logger_cost","Avg Annual CTC of Fuel Logger: ",,value=150000,min=100000,max=300000),
@@ -184,7 +189,7 @@ ui <- shinyUI(fluidPage(
                         fluidRow(
                           column(9,
                                  fluidRow(column(6,h3("Monitoring Pilferage Fuel Loss")),
-                                          column(6, br(), div(class = "right-align", actionButton("pilferage_info_button", "Info", icon = icon("info-circle"))))
+                                          column(6, br(), div(class = "right-align", actionButton("pilferage_info_button", "Info", icon = icon("info-circle"), class = "btn-info")))
                                  ),
                                  fluidRow(
                                    column(width=6,
