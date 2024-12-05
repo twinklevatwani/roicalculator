@@ -737,19 +737,19 @@ server <- function(input, output, session) {
     )
     
     # Create bar plot using ggplot2
-    p <- ggplot(data) +
-      geom_bar(aes(x=Category, y=original, fill="saved_col", text=orig_explanation),stat = "identity",position = "dodge") +
-      # geom_bar(aes(x=Category, y=saved, fill="saved_col", text=saved_explanation),stat = "identity",position = "dodge",width=0.8) +
-      geom_text(aes(x=Category, y=saved/2, label=format_indian(saved)), vjust=0,size=5,color="white") +
-      scale_fill_manual(values = c("original_col" = "blue", "saved_col" = "orange")) +
-      labs(fill = "Saving Comparisions") +
-      theme(legend.position = "none")
-    
-    
-    # Convert ggplot object to plotly for interactive plots
-    p_plotly <- ggplotly(p, tooltip = c("x", "text"))
-    
-    return(p_plotly)
+  p <- ggplot(data) +
+  geom_bar(aes(x = Category, y = Metrics, fill = "original"), stat = "identity", position = "dodge") +
+  geom_bar(aes(x = Category, y = saved_value, fill = "saved"), stat = "identity", position = "dodge") +
+  geom_text(aes(x = Category, y = middle_pos, label = paste("₹", format_indian(saved_value))), vjust = 0, size = 4, color = "white") +
+  geom_text(aes(x = Category, y = 0.8 * cost.df()$Cost, label = paste("₹", format_indian(Metrics))), vjust = 0, size = 3.5, color = "white") +
+  scale_fill_manual(values = c("original" = "blue", "saved" = "orange")) +
+  labs(fill = "Saving Comparisons") +
+  theme(legend.position = "none")
+
+  p_plotly <- ggplotly(p, tooltip = c("x", "y", "fill"))
+
+  return(p_plotly)
+
   })
   
   output$pilferage_explanation <- renderText({
