@@ -1134,5 +1134,196 @@ server <- function(input, output, session) {
     
     fig
   })
+  ## Adding Rental Value Tab 
+rental_values <- reactive({
+N <- input$rented_hemm_count
+U <- input$current_utilisation_rental
+I <- input$util_improvement
+R <- input$monthly_rental
+
+# Cap the improved utilisation
+improved_util <- U + I
+if (improved_util > 100) {
+improved_util <- 100
+I <- improved_util - U
+}
+
+hemms_saved  <- floor(N * (I / 100))
+monthly_savings <- hemms_saved * R
+annual_savings  <- monthly_savings * 12
+
+data.frame(
+Category  = "HEMM Rentals",
+Original_HEMMs  = N,
+Improved_Utilisation  = paste0(improved_util, "%"),
+HEMMs_Saved  = hemms_saved,
+Monthly_Savings_INR  = monthly_savings,
+Annual_Savings_INR  = annual_savings,
+stringsAsFactors = FALSE
+)
+})
+
+output$rental_savings_table <- render_gt({
+df <- rental_values()
+
+df %>%
+gt() %>%
+tab_header(
+title = md("**HEMM Rental Savings**")
+) %>%
+cols_label(
+Category = " ",
+Original_HEMMs = "Original HEMMs",
+Improved_Utilisation = "Improved Utilisation (%)",
+HEMMs_Saved = "HEMMs Saved",
+Monthly_Savings_INR = "Monthly Savings (INR)",
+Annual_Savings_INR = "Annual Savings (INR)"
+) %>%
+fmt_number(
+columns = c(Original_HEMMs, HEMMs_Saved, Monthly_Savings_INR, Annual_Savings_INR),
+use_seps = TRUE,
+sep_mark = ",",
+decimals = 0
+) %>%
+tab_style(
+style = cell_text(weight = "bold"),
+locations = cells_column_labels(everything())
+) %>%
+tab_style(
+style = cell_text(weight = "bold"),
+locations = cells_body(columns = Category)
+)
+})
+
+format_indian <- function(x) {
+formatC(x, format="f", big.mark=",", digits=0)
+}
+
+# Annual savings chart
+output$rental_savings_chart <- renderPlotly({
+N <- input$rented_hemm_count
+U <- input$current_utilisation_rental
+I <- input$util_improvement
+R <- input$monthly_rental
+
+improved_util <- U + I
+if (improved_util > 100) {
+improved_util <- 100
+I <- improved_util - U
+}
+
+hemms_saved <- floor(N * (I / 100))
+original_annual_cost <- N * R * 12
+savings_annual <- hemms_saved * R * 12
+after_improvement_cost <- original_annual_cost - savings_annual
+
+df <- data.frame(
+Segment = c("Savings", "Remaining Cost"),
+Amount = c(savings_annual, after_improvement_cost),
+stringsAsFactors = FALSE
+)
+
+total_original_cost <- after_improvement_cost + savings_annual
+
+p <- ggplot(df, aes(x = "Annual Cost", y = Amount, fill = Segment)) +
+geom_bar(stat = "identity", width = 0.5, position = "stack") +
+# Annual cost
+geom_text(
+data = subset(df, Segment == "Remaining Cost"),
+aes(
+y = Amount + (savings_annual / 2),
+label = paste0("₹ ", format_indian(total_original_cost))
+),
+color = "white", fontface = "bold", size = 5,
+position = position_stack(vjust = 0.5)
+) +
+# Annual savings
+geom_text(
+data = subset(df, Segment == "Savings"),
+aes(
+y = Amount / 2,
+label = paste0("₹ ", format_indian(savings_annual))
+),
+color = "white", fontface = "bold", size = 5,
+position = position_stack(vjust = 0.5, reverse = TRUE)
+) +
+scale_fill_manual(values = c("Savings" = "#FFA500", "Remaining Cost" = "#0000FF")) +
+scale_y_continuous(labels = scales::comma, expand = c(0,0)) +
+coord_cartesian(clip = "off") +
+theme_minimal(base_size = 14) +
+labs(title = "Annual Rental Cost Comparison", x = NULL, y = "Cost (INR)") +
+theme(
+axis.text.x = element_blank(),
+axis.title.y = element_text(face = "bold"),
+panel.grid.major.x = element_blank(),
+plot.title = element_text(face = "bold")
+)
+
+ggplotly(p)
+})
+
+# Monthly savings chart
+output$rental_savings_monthly_chart <- renderPlotly({
+N <- input$rented_hemm_count
+U <- input$current_utilisation_rental
+I <- input$util_improvement
+R <- input$monthly_rental
+
+improved_util <- U + I
+if (improved_util > 100) {
+improved_util <- 100
+I <- improved_util - U
+}
+
+hemms_saved <- floor(N * (I / 100))
+original_monthly_cost <- N * R
+savings_monthly <- hemms_saved * R
+after_improvement_monthly_cost <- original_monthly_cost - savings_monthly
+
+df_monthly <- data.frame(
+Segment = c("Savings", "Remaining Cost"),
+Amount = c(savings_monthly, after_improvement_monthly_cost),
+stringsAsFactors = FALSE
+)
+
+total_original_monthly <- after_improvement_monthly_cost + savings_monthly
+
+p_monthly <- ggplot(df_monthly, aes(x = "Monthly Cost", y = Amount, fill = Segment)) +
+geom_bar(stat = "identity", width = 0.5, position = "stack") +
+# monthly cost
+geom_text(
+data = subset(df_monthly, Segment == "Remaining Cost"),
+aes(
+y = Amount + (savings_monthly / 2),
+label = paste0("₹ ", format_indian(total_original_monthly))
+),
+color = "white", fontface = "bold", size = 5,
+position = position_stack(vjust = 0.5)
+) +
+# Monthly savings
+geom_text(
+data = subset(df_monthly, Segment == "Savings"),
+aes(
+y = Amount / 2,
+label = paste0("₹ ", format_indian(savings_monthly))
+),
+color = "white", fontface = "bold", size = 5,
+position = position_stack(vjust = 0.5, reverse = TRUE)
+) +
+scale_fill_manual(values = c("Savings" = "#FFA500", "Remaining Cost" = "#0000FF")) +
+scale_y_continuous(labels = scales::comma, expand = c(0,0)) +
+coord_cartesian(clip = "off") +
+theme_minimal(base_size = 14) +
+labs(title = "Monthly Rental Cost Comparison", x = NULL, y = "Cost (INR)") +
+theme(
+axis.text.x = element_blank(),
+axis.title.y = element_text(face = "bold"),
+panel.grid.major.x = element_blank(),
+plot.title = element_text(face = "bold")
+)
+
+ggplotly(p_monthly)
+})
+
   
 }
