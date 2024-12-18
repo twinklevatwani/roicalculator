@@ -1134,5 +1134,51 @@ server <- function(input, output, session) {
     
     fig
   })
-  
+  output$digitisation_cost_benefit_plot <- renderPlotly({
+  N <- input$rented_hemm_count
+  opex <- input$digitisation_opex
+  capex <- input$digitisation_capex
+
+  df_savings <- rental_values()
+  annual_savings <- df_savings$Annual_Savings_INR[1]
+
+  year1_cost <- (capex * N) + (opex * N)
+  year2_cost <- opex * N
+  year3_cost <- opex * N
+  year4_cost <- opex * N
+  year5_cost <- opex * N
+
+  cumulative_cost <- c(
+    year1_cost,
+    year1_cost + year2_cost,
+    year1_cost + year2_cost + year3_cost,
+    year1_cost + year2_cost + year3_cost + year4_cost,
+    year1_cost + year2_cost + year3_cost + year4_cost + year5_cost
+  )
+
+  cumulative_benefit <- c(
+    annual_savings,
+    annual_savings * 2,
+    annual_savings * 3,
+    annual_savings * 4,
+    annual_savings * 5
+  )
+
+  df_plot <- data.frame(
+    Year = 1:5,
+    Cumulative_Cost = cumulative_cost,
+    Cumulative_Benefit = cumulative_benefit
+  )
+
+  p <- ggplot(df_plot, aes(x = Year)) +
+    geom_line(aes(y = Cumulative_Cost, color = "Cost"), size = 1) +
+    geom_line(aes(y = Cumulative_Benefit, color = "Benefit"), size = 1) +
+    scale_color_manual(values = c("Cost" = "red", "Benefit" = "green")) +
+    labs(title = "5-Year Cost vs Benefit Comparison", x = "Year", y = "INR") +
+    theme_minimal(base_size = 14) +
+    theme(plot.title = element_text(face = "bold"))
+
+  ggplotly(p)
+})
+
 }
