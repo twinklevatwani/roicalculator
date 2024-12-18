@@ -407,6 +407,29 @@ ui <- shinyUI(fluidPage(
              #            ),
              #          )
              # ),
+             tabPanel("Rentals", 
+                      fluidPage(
+                      h2("Improve Utilisation and Reduce Rental Costs"), 
+                      fluidRow(
+                                column(3, 
+                                      numericInput("rented_hemm_count", "Number of HEMMs Rented:", value = 20, min = 1),
+                                      numericInput("current_utilisation_rental", "Current Utilisation (%):", value = 60, min = 0, max = 100),
+                                      sliderInput("util_improvement", "Utilisation Improvement (%):", min = 0, max = 20, value = 10),
+                                      numericInput("monthly_rental", "Average Rental per HEMM (INR/Month):", value = 50000, min = 1)
+                                      ), 
+                                column(9,
+                                      h4("Calculated Savings:"),
+                                      gt_output("rental_savings_table"),
+
+                                      h4("Annual Savings Chart:"),
+                                      plotlyOutput("rental_savings_chart"),
+
+                                      h4("Monthly Savings Chart:"),
+                                      plotlyOutput("rental_savings_monthly_chart")
+                                      )
+                                    )
+                                   )
+                                  ),
              
              tabPanel("Summary",
                       fluidPage(
