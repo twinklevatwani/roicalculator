@@ -1,3 +1,8 @@
+# Ensure the latest version of gt is installed
+if (!require("gt") || packageVersion("gt") < "0.3.0") {
+  install.packages("gt")
+}
+# Load libraries
 library(shiny)
 library(DT)
 library(ggplot2)
@@ -5,6 +10,7 @@ library(plotly)
 library(stringr)
 library(scales)
 library(gt)
+
 options(scipen = 999)
 
 server <- function(input, output, session) {
@@ -22,6 +28,23 @@ server <- function(input, output, session) {
   
   # values-reactive Values relevant across all calculations put in a reactive for easier access
   values <- reactive({
+  # Fallback logic if values are missing
+  shift_count <- ifelse(is.null(input$shift_count) || input$shift_count <= 0, 1, input$shift_count)
+  hemm_count <- ifelse(is.null(input$hemm_count) || input$hemm_count <= 0, 1, input$hemm_count)
+  fuel_consumption <- ifelse(is.null(input$hemm_daily_consump) || input$hemm_daily_consump <= 0, 100, input$hemm_daily_consump)
+  truck_count <- ifelse(is.null(input$truck_count) || input$truck_count <= 0, 1, input$truck_count)
+  logger_count <- ifelse(is.null(input$logger_count_per_bowser) || input$logger_count_per_bowser <= 0, 1, input$logger_count_per_bowser)
+
+  # validation message for input values
+  validate(
+    need(input$shift_count > 0, "Please enter a positive number for Shift Count."),
+    need(input$hemm_count > 0, "Please enter a positive number for Number of HEMM."),
+    need(input$hemm_daily_consump > 0, "Please enter a positive number for HEMM Fuel Consumption/Day."),
+    need(input$truck_count > 0, "Please enter a positive number for Number of Trucks."),
+    need(input$logger_count_per_bowser > 0, "Please enter a positive number for Number of Loggers per Bowser.")
+    )
+
+
     # these variables are out since they are being used for calculation in data frame
     # data frame scope prevents creation and usage in the same scope hence outside creation
     entries_per_year = req(input$fuel_entry_count) * 365
@@ -484,7 +507,7 @@ server <- function(input, output, session) {
     gt(field_data) %>%
       tab_header(
         title = md("Manpower Expense Comparisions"),
-        subtitle = md("A tabulation of current expenses and `MindShift` impact")
+        subtitle = md("A tabulation of current expenses and `Mindshift` impact")
       ) %>%
       cols_label(
         FTE = "Roles",
@@ -498,7 +521,7 @@ server <- function(input, output, session) {
       # adding column spanner and styling
       tab_spanner(
         label="Current State",
-        columns = vars(current_Count,current_Cost)
+        columns = c(current_Count,current_Cost)
       ) %>%
       tab_style(
         style = list(
@@ -508,15 +531,15 @@ server <- function(input, output, session) {
         locations = cells_column_spanners(spanners = "Current State")
       ) %>%
       tab_spanner(
-        label="MindShift's Solution Impact",
-        columns = vars(reduced_Count,future_Count,future_Cost)
+        label="Mindshift's Solution Impact",
+        columns = c(reduced_Count,future_Count,future_Cost)
       ) %>%
       tab_style(
         style = list(
           cell_fill(color = "orange"),
           cell_text(weight = "bold")
         ),
-        locations = cells_column_spanners(spanners = "MindShift's Solution Impact")
+        locations = cells_column_spanners(spanners = "Mindshift's Solution Impact")
       )  %>%
       
       # adding styling to cells and borders
@@ -563,7 +586,7 @@ server <- function(input, output, session) {
           cell_fill(color = "pink")
         ),
         locations = cells_body(
-          columns = vars(current_Cost),
+          columns = c(current_Cost),
           rows = c(5)
         )
       ) %>%
@@ -572,7 +595,7 @@ server <- function(input, output, session) {
           cell_fill(color = "lightgreen")
         ),
         locations = cells_body(
-          columns = vars(future_Cost),
+          columns = c(future_Cost),
           rows = c(5)
         )
       ) %>%
@@ -604,20 +627,22 @@ server <- function(input, output, session) {
     data <- data.frame(cost.df()$Titles, cost.df()$Cost, cost.df()$Saved)
     colnames(data) <- c("Category","Metrics","saved_value")
     
-    middle_pos = cost.df()$Saved/2
+    middle_pos = data$saved_value / 2 
     
+    # Create the ggplot for Side-by-Side Bars
+    # Create bar plot using ggplot2
+    # Create bar plot using ggplot2
     gg <- ggplot(data) +
-      geom_bar(aes(x = Category, y = Metrics, fill="original",text=orig_explanation), stat = "identity", position="dodge") +
-      geom_bar(aes(x = Category, y = saved_value, fill="saved",text=saved_explanation), stat = "identity", position="dodge") +
-      geom_text(aes(x = Category, y = middle_pos, label = paste("₹",format_indian(saved_value))), vjust = 0, size = 4,color="white") +
-      geom_text(aes(x= Category, y = 0.8*cost.df()$Cost, label = paste("₹",format_indian(Metrics))), vjust=0, size = 3.5,color="white") +
+      geom_bar(aes(x = Category, y = Metrics, fill="original"), stat = "identity", position = position_dodge(width = 0.8)) +
+      geom_bar(aes(x = Category, y = saved_value, fill="saved"), stat = "identity", position = position_dodge(width = 0.8), width = 0.6) +
+      geom_text(aes(x = Category, y = middle_pos, label = paste("₹", format_indian(saved_value))), vjust = 0, size = 4, color="white") +
+      geom_text(aes(x = Category, y = 0.8*cost.df()$Cost, label = paste("₹", format_indian(Metrics))), vjust = 0, size = 3.5, color="white") +
       scale_fill_manual(values = c("original" = "blue", "saved" = "orange")) +
-      labs(fill = "Saving Comparisions") +
+      labs(fill = "Saving Comparisons") +
       theme(legend.position = "none")
     
     # Convert ggplot object to plotly for interactive plots
     p_plotly <- ggplotly(gg, tooltip = "text")
-    
     return(p_plotly)
   })
   
@@ -721,24 +746,26 @@ server <- function(input, output, session) {
       paste("<b>",format_indian(pilferage_values()$under_reporting_yearly),"Litres</b> of Fuel currently Under-reported")
     )
     saved_explanation <- c(
-      paste("Savings of <b>",format_indian(pilferage_values()$saving_ftheft),"Litres</b> of Fuel after MindShift Under-reported"),
-      paste("Savings of <b>",format_indian(pilferage_values()$saving_ur),"Litres</b> of Fuel after MindShift Under-reported")
+      paste("Savings of <b>",format_indian(pilferage_values()$saving_ftheft),"Litres</b> of Fuel after Mindshift Under-reported"),
+      paste("Savings of <b>",format_indian(pilferage_values()$saving_ur),"Litres</b> of Fuel after Mindshift Under-reported")
     )
     
     # Create bar plot using ggplot2
+    # Assuming 'data' is already prepared
     p <- ggplot(data) +
-      geom_bar(aes(x=Category, y=original, fill="saved_col", text=orig_explanation),stat = "identity",position = "dodge") +
-      # geom_bar(aes(x=Category, y=saved, fill="saved_col", text=saved_explanation),stat = "identity",position = "dodge",width=0.8) +
-      geom_text(aes(x=Category, y=saved/2, label=format_indian(saved)), vjust=0,size=5,color="white") +
-      scale_fill_manual(values = c("original_col" = "blue", "saved_col" = "orange")) +
-      labs(fill = "Saving Comparisions") +
+      geom_bar(aes(x=Category, y=saved_value, fill="saved_col"), stat = "identity", position = "dodge") +
+      geom_text(aes(x=Category, y=saved_value/2, label=format_indian(saved_value)), vjust=0, size=5, color="white") +
+      scale_fill_manual(values = c("saved_col" = "orange")) +
+      labs(fill = "Saving Comparisons") +
       theme(legend.position = "none")
-    
+
+
     
     # Convert ggplot object to plotly for interactive plots
     p_plotly <- ggplotly(p, tooltip = c("x", "text"))
-    
+
     return(p_plotly)
+
   })
   
   output$pilferage_explanation <- renderText({
@@ -757,7 +784,8 @@ server <- function(input, output, session) {
     #checking input to prevent crashes
     req(!is.null(input$idle_load_perc), input$idle_load_perc != 0)
     req(!is.null(input$idle_mod_on_val), input$idle_mod_on_val != 0)
-    
+    req(!is.null(input$shift_count), input$shift_count != 0)
+
     
     
     off_perc = 100 - input$idle_usage_per
@@ -863,7 +891,7 @@ server <- function(input, output, session) {
     gt(field_data) %>%
       tab_header(
         title = md("Consumption Comparisions"),
-        subtitle = md("A tabulation of consumption change by `MindShift` impact")
+        subtitle = md("A tabulation of consumption change by `Mindshift` impact")
       ) %>%
       cols_label(
         Metrics = "Metrics",
@@ -915,7 +943,7 @@ server <- function(input, output, session) {
           cell_fill(color = "pink")
         ),
         locations = cells_body(
-          columns = vars(current_Consumption),
+          columns = c(current_Consumption),
           rows = c(3)
         )
       ) %>%
@@ -924,7 +952,7 @@ server <- function(input, output, session) {
           cell_fill(color = "pink")
         ),
         locations = cells_body(
-          columns = vars(new_Consumption),
+          columns = c(new_Consumption),
           rows = c(3)
         )
       ) %>%
@@ -981,16 +1009,16 @@ server <- function(input, output, session) {
       value = c(idle_total()$idling_ldp, idle_total()$idle_mod_consump_lpd),
       explanation = c(
         paste("Originally <b>",idle_total()$idling_ldp," litres</b> of fuel is consumed per day"),
-        paste("After MindShift <b>",idle_total()$idle_mod_consump_lpd," litres</b> of fuel is consumed per day"))
+        paste("After Mindshift <b>",idle_total()$idle_mod_consump_lpd," litres</b> of fuel is consumed per day"))
     )
     
     gg <- ggplot(data, aes(y = title, x = value, fill = type, text=explanation)) +
-      geom_bar(stat = "identity", position = position_dodge(width = 1)) +
-      geom_text(aes(x=value/2,label = format_indian(value)),
-                position = position_dodge(width = 1),
-                vjust = 0.5, hjust = -0.3, size = 5,color="white") +
+      geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.6) +
+      geom_text(aes(x=value/2, label = format_indian(value)),
+                position = position_dodge(width = 0.8),
+                vjust = 0.5, hjust = -0.3, size = 5, color="white") +
       scale_fill_manual(values = c("Original" = "blue", "Saved" = "orange")) +
-      labs(fill = "Saving Comparisons",x="Litres Consumed /HEMM/Day",y="Comparision Before After") +
+      labs(fill = "Saving Comparisons", x="Litres Consumed /HEMM/Day", y="Comparison Before After") +
       theme(legend.position = "none") +
       coord_flip()
     
@@ -1075,7 +1103,7 @@ server <- function(input, output, session) {
       paste("Value saved from ManPower: <b>₹",format_indian(mp_sum),"/-</b>"),
       paste("Value saved from Pilferage: <b>₹",format_indian(pl_sum),"/-</b>"),
       paste("Value saved from Idling: <b>₹",format_indian(idle_sum),"/-</b>"),
-      paste("Yearly Savings by using <b>MindShift:  ₹",format_indian(mp_sum + pl_sum + idle_sum),"/-</b>")
+      paste("Yearly Savings by using <b>Mindshift:  ₹",format_indian(mp_sum + pl_sum + idle_sum),"/-</b>")
     )
     
     data <- data.frame(
@@ -1106,5 +1134,52 @@ server <- function(input, output, session) {
     
     fig
   })
-  
+  ### Added Digitisation tab
+  output$digitisation_cost_benefit_plot <- renderPlotly({
+  N <- input$rented_hemm_count
+  opex <- input$digitisation_opex
+  capex <- input$digitisation_capex
+
+  df_savings <- rental_values()
+  annual_savings <- df_savings$Annual_Savings_INR[1]
+
+  year1_cost <- (capex * N) + (opex * N)
+  year2_cost <- opex * N
+  year3_cost <- opex * N
+  year4_cost <- opex * N
+  year5_cost <- opex * N
+
+  cumulative_cost <- c(
+    year1_cost,
+    year1_cost + year2_cost,
+    year1_cost + year2_cost + year3_cost,
+    year1_cost + year2_cost + year3_cost + year4_cost,
+    year1_cost + year2_cost + year3_cost + year4_cost + year5_cost
+  )
+
+  cumulative_benefit <- c(
+    annual_savings,
+    annual_savings * 2,
+    annual_savings * 3,
+    annual_savings * 4,
+    annual_savings * 5
+  )
+
+  df_plot <- data.frame(
+    Year = 1:5,
+    Cumulative_Cost = cumulative_cost,
+    Cumulative_Benefit = cumulative_benefit
+  )
+
+  p <- ggplot(df_plot, aes(x = Year)) +
+    geom_line(aes(y = Cumulative_Cost, color = "Cost"), size = 1) +
+    geom_line(aes(y = Cumulative_Benefit, color = "Benefit"), size = 1) +
+    scale_color_manual(values = c("Cost" = "red", "Benefit" = "green")) +
+    labs(title = "5-Year Cost vs Benefit Comparison", x = "Year", y = "INR") +
+    theme_minimal(base_size = 14) +
+    theme(plot.title = element_text(face = "bold"))
+
+  ggplotly(p)
+})
+
 }

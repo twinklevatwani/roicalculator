@@ -56,11 +56,16 @@ ui <- shinyUI(fluidPage(
           font-size: 24px;
           margin: 0;
       }
+      .btn-info {
+              background-color: #008000 !important; /* Green background */
+              color: white !important; /* White text */
+              border-color: #2e6da4 !important; /* Green border */
+      }
     "))
   ),
   
   div(class="title_container",
-      div(class="heading",titlePanel("Return Of Investment Calculator")),
+      div(class="heading",titlePanel("Return On Investment Calculator")),
       div(
         img(src = "new_logo.png", class = "logo")
       )),
@@ -70,7 +75,7 @@ ui <- shinyUI(fluidPage(
   fluidRow(column(width=2,
                   numericInput("shift_count","Number of shifts",value = 2,min = 1)),
            column(width=2,
-                  numericInput("hemm_count","Number of HEMM",value=100)),
+                  numericInput("hemm_count","Number of Heavy Earth Moving Macinery",value=100)),
            column(width=2,
                   numericInput("truck_count","Number of diesel bowsers/site",value = 3,min=0,max=10)),
            column(width=2,
@@ -90,8 +95,8 @@ ui <- shinyUI(fluidPage(
                           fluidRow(
                             column(12,
                                    div(
-                                     fluidRow(column(9,h3("Step 1: Enter FTE Details")),column(3,div(class="right-align",br(),actionButton("manpower_info_button", "Info", icon = icon("info-circle"))))),
-                                     radioButtons("manpower_dispatch_q","Do you have Fuel Dispatchers for scheduling Fuel Bowser Trips?",
+                                     fluidRow(column(9,h3("Step 1: Enter FTE Details")),column(3,div(class="right-align",br(),actionButton("manpower_info_button", "Info", icon = icon("info-circle"), class = "btn-info")))),
+                                     radioButtons("manpower_dispatch_q","Do you have Fuel Dispatchers for scheduling fuel truck trips?",
                                                   choices = c("Yes" = TRUE, "No" = FALSE),
                                                   inline = TRUE),
                                      numericInput("coordinator_count"," Fuel Dispatchers/Shift",value=2),
@@ -112,7 +117,7 @@ ui <- shinyUI(fluidPage(
                           fluidRow(
                             column(12,
                                    div(
-                                     fluidRow(column(9,h3(" Step 2: CTC Input")),column(3,div(class="right-align",br(),actionButton("manpower_ctc_info_button", "Info", icon = icon("info-circle"))))),
+                                     fluidRow(column(9,h3(" Step 2: CTC Input")),column(3,div(class="right-align",br(),actionButton("manpower_ctc_info_button", "Info", icon = icon("info-circle"), class = "btn-info")))),
                                      
                                      sliderInput("fuel_dispatcher_cost","Avg Annual CTC of Fuel Dispatcher: ",value=500000,min=100000,max=1000000),
                                      sliderInput("fuel_logger_cost","Avg Annual CTC of Fuel Logger: ",,value=150000,min=100000,max=300000),
@@ -125,7 +130,7 @@ ui <- shinyUI(fluidPage(
                         mainPanel(fluidPage(
                           column(8,
                                  fluidRow(
-                                   h3("Step 3: Employee Count and Salary Comparison"),
+                                   h3("Step 3: Number of  Employees  and Salary Breakdown"),
                                    tableOutput("manpower_data")
                                  ),
                                  fluidRow(
@@ -141,8 +146,10 @@ ui <- shinyUI(fluidPage(
                                  
                                  splitLayout(verbatimTextOutput("manpower_fte_total"),
                                              verbatimTextOutput("manpower_pte_total")),
-                                 h3("How you can acheive savings with MindShift:"),
-                                 p("MindShift offers the capability to automate manual data entry, updates, and analysis processes, facilitating a transition to a time-efficient fuel management method.\n
+
+                                 h3("How you can achieve savings with Mindshift:"),
+                                 p("Mindshift offers the capability to automate manual data entry, updates, and analysis processes, facilitating a transition to a time-efficient fuel management method.\n
+
                                    This transition leads to cost savings and increased productivity for your organization.")),
                         )
                         )
@@ -157,7 +164,7 @@ ui <- shinyUI(fluidPage(
                                 ),
                                 tags$li(
                                   h3("Fuel Loggers:"),
-                                  p("These individuals manually log HMR and fuel transaction from a bowser to an HEMM on paper"),
+                                  p("These individuals manually log HMR and fuel transactions from a bowser to an HEMM on paper"),
                                 ),
                                 tags$li(
                                   h3("Data Entry Operators:"),
@@ -183,8 +190,8 @@ ui <- shinyUI(fluidPage(
                       fluidPage(
                         fluidRow(
                           column(9,
-                                 fluidRow(column(6,h3("Monitoring Pilferage Fuel Loss")),
-                                          column(6, br(), div(class = "right-align", actionButton("pilferage_info_button", "Info", icon = icon("info-circle"))))
+                                 fluidRow(column(6,h3("Monitoring Fuel  Pilferage and Loss")),
+                                          column(6, br(), div(class = "right-align", actionButton("pilferage_info_button", "More Info", icon = icon("info-circle"), class = "btn-info")))
                                  ),
                                  fluidRow(
                                    column(width=6,
@@ -199,7 +206,7 @@ ui <- shinyUI(fluidPage(
                                           )
                                    ),
                                    column(width=6,
-                                          h4("Refuellings/HEMM/month"),
+                                          h4("refuelings/HEMM/month"),
                                           verbatimTextOutput("refuels_per_month"))
                                  ),
                                  fluidRow(column(width = 4,
@@ -210,7 +217,7 @@ ui <- shinyUI(fluidPage(
                                                                                            icon("lightbulb"),
                                                                                            style="color: #fff; background-color: #008000; border-color: #2e6da4")))),
                                                    numericInput("ur_day_count", "How many over-reportings across all fleet do you think happen per day?", value = 70),
-                                                   numericInput("ur_day_vol", "How many litres is over reported each instance?", value = 1.5),
+                                                   numericInput("ur_day_vol", "How many litres are over reported each instance?", value = 1.5),
                                                    tableOutput("underreported_calculations")
                                                  )),
                                           column(width = 4,
@@ -232,7 +239,10 @@ ui <- shinyUI(fluidPage(
                                  verbatimTextOutput("pilferage_explanation"),
                                  h5("Fuel Savings (₹)"),
                                  verbatimTextOutput("pilferage_cost"),
-                                 h4("How you can acheive savings with MindShift:"),
+
+                                 
+                                 h4("How You can Achieve Savings With Mindshift:"),
+
                                  tags$ul(
                                    tags$li(
                                      h5("Real-Time Monitoring:"),
@@ -278,11 +288,11 @@ ui <- shinyUI(fluidPage(
              # IDLING Tab
              
              tabPanel("Idling",
-                      fluidRow(column(9,h3("Monitoring Excessive Idling")),column(3,div(class="right-align",br(),actionButton("idling_info_button", "Info", icon = icon("info-circle"))))),
+                      fluidRow(column(9,h3("Monitoring Excessive Idling Behavior")),column(3,div(class="right-align",br(),actionButton("idling_info_button", "More Info", icon = icon("info-circle"))))),
                       sidebarLayout(
                         sidebarPanel(width=6,fluidRow(column(6,
                                                              numericInput("idle_usage_per","Effective utilization percentage?",min=-10,max=100,value=60)),
-                                                      column(6,numericInput("idle_load_perc","Loaded state percentage during utilisation",min=-10,max=99,value=70))),
+                                                      column(6,numericInput("idle_load_perc","Loaded state percentage during utilization",min=-10,max=99,value=70))),
                                      fluidRow(column(6,
                                                      h5("Total Time in Consideration"),
                                                      verbatimTextOutput("idle_total_time")),
@@ -302,7 +312,7 @@ ui <- shinyUI(fluidPage(
                                                                      However, after investing in MindShift Analytics,
                                                                      one gains the capability to meticulously track and mitigate idle durations,
                                                                      consequently reducing consumption metrics and enhancing operational efficiency.")))),
-                        mainPanel(width=6,fluidPage(column(8,fluidRow(column(6,h5("Total Utilisation Hours"),
+                        mainPanel(width=6,fluidPage(column(8,fluidRow(column(6,h5("Total utilization Hours"),
                                                                              verbatimTextOutput("idle_util_hours")),
                                                                       column(6,h5("Total Off Hours"),
                                                                              verbatimTextOutput("idle_off_hours"))),
@@ -312,7 +322,7 @@ ui <- shinyUI(fluidPage(
                                                                     column(6,
                                                                            h5("Current Loaded Hours"),
                                                                            verbatimTextOutput("idle_loading_working_hours"))),
-                                                           fluidRow(column(8,h5("Meticulous tracking and mitigation of idle durations,
+                                                           fluidRow(column(8,h5("Meticulous tracking and mitigation of idle durations
                                                                                 can consequently reduce consumption.")),
                                                                     column(4,numericInput("idle_mod_on_val","Alter Idling Hours",value=1,min=0.1))),
                                                            fluidRow(tableOutput("idle_comparision_table")
@@ -328,6 +338,7 @@ ui <- shinyUI(fluidPage(
                                )
                         )
                         )
+                        
                         )
                       ),
                       bsModal("idle_info_modal", "Idling Information:", "idling_info_button", size = "large",
@@ -338,7 +349,7 @@ ui <- shinyUI(fluidPage(
                                 ),
                                 tags$li(
                                   h3("Utilization Breakdown:"),
-                                  p("The utilization time is further divided into idle time and loaded time."),
+                                  p(" Utilization time is further divided into idle time and loaded time."),
                                 ),
                                 tags$li(
                                   h3("Idle State:"),
@@ -371,7 +382,7 @@ ui <- shinyUI(fluidPage(
              #            ),
              #            fluidRow(
              #              column(3,numericInput("movable_hemm_count","Number of movable Hemm",value=50)),
-             #              column(width=3,numericInput("movable_percent_get","% of refuellings from SFS",value=20)),
+             #              column(width=3,numericInput("movable_percent_get","% of refuelings from SFS",value=20)),
              #              column(width=3,numericInput("movable_get_time","Time Spent in each trip",value=1)),
              #              column(width=3,numericInput("movable_hemm_price","Enter price of HEMM/hour",value=1500)),
              #
@@ -382,7 +393,7 @@ ui <- shinyUI(fluidPage(
              #                                     h3("Number of refuels/annually"),
              #                                     verbatimTextOutput("movable_refuel_sumannual")),
              #                              column(width=3,
-             #                                     h3("Total self refeulling time"),
+             #                                     h3("Total self refueling time"),
              #                                     verbatimTextOutput("movable_time_spent")),
              #                              fluidRow(
              #                                column(width=5,
@@ -435,3 +446,4 @@ ui <- shinyUI(fluidPage(
   )
 )
 )
+
