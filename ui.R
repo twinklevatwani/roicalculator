@@ -407,7 +407,19 @@ ui <- shinyUI(fluidPage(
              #            ),
              #          )
              # ),
-             
+             tabPanel("Digitisation",
+                      fluidPage(
+                      h3("Digitisation Cost vs Benefit"),
+
+                      # Inputs for OPEX and CAPEX
+                        sliderInput("digitisation_opex", "OPEX per HEMM/Year (INR):", min = 2000, max = 20000, value = 6000),
+                        sliderInput("digitisation_capex", "CAPEX per HEMM (INR):", min = 10000, max = 50000, value = 30000),
+
+                        h4("Cost vs Benefit Over 5 Years"),
+                        plotlyOutput("digitisation_cost_benefit_plot")
+                         )
+                        ),
+
              tabPanel("Summary",
                       fluidPage(
                         h1("Overall Savings"),
